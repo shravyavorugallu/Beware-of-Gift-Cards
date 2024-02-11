@@ -1,0 +1,19 @@
+Part-3 writeup
+
+Fuzzer1.gft
+
+Issue:
+The giftcardreader application was encountering a critical error, leading to termination with the message"***stack smashing detected***:terminated Abortedd (core dumped)." This issue likely stemmed from a buffer overflow exploit present in the source code.
+Bug:
+Upon debugging the program with GDB (GNU Debugger), it is identified that overflow ocurred within the switch case '0x04' block. AT this point, the vaLue of 'arg2' exceeded its expected bounds, reaching 30, while 'arg1' had value 1. Consequently memory is overridden in areas that should have remained inaccessible otherwise.
+Solution:
+Introducing bounds checking for ' arg2' with "if (arg2 >= 0 && arg2 <= 15)." mitigated the issue.
+
+fuzzer2.gft
+
+Issue:
+giftcardreader.c encountered a critical error resulting in a asegmentation fault (core dumped) message. This error hinted to an attempt to unaccessible memory.
+Bug:
+Upon debugging the program with GDB (GNU Debugger), it's proved that program attempted to access memory location that was otherwise inaccessible.Then after further backtracing using 'bt full' it's releaved that the error occured due to message parameter pointing to inaccessible memory location. 'string = 0x8948c8458b48ffff' and 'grouping = 0xffffffffffffffff'..THe binayr fuzzer2.gft was executing animate function multiple times within the case block '0x03'. In this case mptr ointer was being subjected to changes without bound checking even though it hsould ideally point to 'msg' which is expected to be maximum of 32 bytes, as per the requirements.
+Solution:
+Including a bound checking for mptr pointer "if (mptr < (msg + 31))" to ensure the pointer stays within defined limits mitigated the issue.

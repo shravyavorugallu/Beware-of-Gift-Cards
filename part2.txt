@@ -1,0 +1,73 @@
+For part-2 of the assignment to create test cases that expose flaws in the program, potential issues must be identified. Here is designing test cases according to the potential flaws.
+
+From giftcard.c below are few issues to consider:
+
+1. Buffer overflows: The vulnerability related to reding data without checking proper bounds which leads the program to crash.
+2. Invalid inputs: This is a vulnerability that implies program cannot handle invalid or unexpected input data leading the program to crash.
+3. Infinite loops: On presenting incorrectr conditions the program cannot handle scenarios leading to infinite looping and might hang up. 
+
+Next step is to create scenarios for the test cases based on above vulnerabilities in the program.
+
+Test case 1: crash1.gft (Buffer overflow)
+Considering the target program for buffer overflow vulnerability in the program:
+Creating a gift card with a large value for num_records to make the program allocate insufficient memory. Crafting it in a way that it reports a smaller file size than it actually has will trigger a buffer overflow leading to crash.
+The program reads the record size incorrectly and tries to allocate mmore memory than that is available and this unclear behaviour can cause a crash.
+
+Test case 2: crash2.gft(Invalid Input)
+This test case deals with invalid input data.
+Creating a gift card with invalid record type will force the program to encounter an unexpected record type. For this the gift card with negative amount in the amount_added can be used. Since there weren't any handling for unknown record type the program can crash whenever it comes across it.
+
+Tets case 3: hang.gft (Infinite Loop)
+Using "animation" record type an infinite loop vulnerability can be created taht will hang the program.
+Firstly create a gift card with animated message program and then crafting a program that includes instructions that will loop the program indefinetely because there are not sufficient directions for the program to handle the frequent hanging.
+
+
+
+Fixing the vulnerabilities:
+
+To fix the vulnerabilities listed above so that the program no longer crashes or hangs following changes are to be applied:
+
+For Test case 1: Buffer Overflow (crash1.gft)
+Checking if reported file size is same as that of actual size before parsing the records makes the program watchout for extra memory allocations and thus handling th error case.
+
+// Check that the reported file size matches the actual size
+if (reported_file_size != file_size) {
+    fprintf(stderr, "error: file size on disk (%ld) does not match size in header (%d), aborting\n",
+            file_size, reported_file_size);
+    goto error_ret;
+}
+
+For Test case 2: Invalid input like unkown record types or negative values (crash2.gft)
+Issue: The program doesn't handle unexpected record types or negative values in the amount_added field.
+Fix: Adding checks for unexpected record types and handling negative values in the amount_added field.
+// Adding checks for unexpected reocrd types in the amount_added field:
+if (gcr->rec_type != GC_AMOUNT && gcr->rec_type != GC_MESSAGE && gcr->rec_type != GC_PROGRAM) {
+    fprintf(stderr, "unknown record type encountered: %d; aborting\n", gcr->rec_type);
+    goto error_ret;
+}
+
+// Adding checks for negative values in the amount_added field:
+if (gcr->rec_type == GC_AMOUNT && gcr->amount.amount < 0) {
+    fprintf(stderr, "invalid negative amount_added value: %d; aborting\n", gcr->amount.amount);
+    goto error_ret;
+}
+
+For Test case 3: Infinite loop(hang.gft)
+Issue:The program enters an infinite loop when executing an animation program.
+Fix: Limit the number of steps the program can execute to prevent infinite loops. Add a counter and check for excessive steps.
+
+#define MAX_STEPS 100000
+
+// Inside the animate function
+while (steps < MAX_STEPS) {
+    // ... Existing code ...
+
+    // Add a check for excessive steps
+    if (steps >= MAX_STEPS) {
+        fprintf(stderr, "exceeded maximum allowed steps; aborting\n");
+        break;
+    }
+    steps++;
+}
+
+After applying these fixes the program has handling cases for crashes and hangs on the provided test cases.
